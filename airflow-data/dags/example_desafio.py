@@ -1,3 +1,5 @@
+import pandas as pd
+import sqlite3
 from airflow.utils.edgemodifier import Label
 from datetime import datetime, timedelta
 from textwrap import dedent
@@ -17,7 +19,44 @@ default_args = {
     'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
+def task1():
+    
+    sql_database_path = '/mnt/c/Users/laism/repositorios_indicium/airflow_tooltorial/data/Northwind_small.sqlite'
+    table_name = '"Order"'
+    csv_path = '/mnt/c/Users/laism/repositorios_indicium/airflow_tooltorial/target/output_orders.csv'
+    
+    conn = sqlite3.connect(sql_database_path)
 
+    query = f'select * from {table_name}'
+    df = pd.read_sql(query,conn)
+
+    df.to_csv(csv_path, index= False)
+    
+    conn.close()
+
+
+def task2():
+    sql_database_path = '/mnt/c/Users/laism/repositorios_indicium/airflow_tooltorial/data/Northwind_small.sqlite'
+    csv_path = '/mnt/c/Users/laism/repositorios_indicium/airflow_tooltorial/target/output_orders.csv'
+    count_txt_path = '/mnt/c/Users/laism/repositorios_indicium/airflow_tooltorial/count.txt'
+    
+    df_csv = pd.read_csv(csv_path)
+    
+    conn = sqlite3.connect(sql_database_path)
+    
+    query = """select quantity , OrderId
+    from OrderDetail"""
+    df_sqlite = pd.read_sql(query, conn)
+    
+    conn.close()
+    
+    merged_df = pd.merge(df_csv, df_sqlite, left_on='Id', right_on='OrderId', how='inner')
+    
+    count_txt = str(merged_df[merged_df['ShipCity'] == 'Rio de Janeiro']['Quantity'].sum())
+
+    with open(count_txt_path, 'w') as f:
+        f.write(count_txt)
+    
 
 ## Do not change the code below this line ---------------------!!#
 def export_final_answer():
@@ -50,9 +89,22 @@ with DAG(
     dag.doc_md = """
         Esse é o desafio de Airflow da Indicium.
     """
-   
+    # Task definitions
+    task1 = PythonOperator(
+        task_id='task1',
+        python_callable=task1,
+    )
+    
+    task2 = PythonOperator(
+        task_id='task2',
+        python_callable=task2,
+    )
+
     export_final_output = PythonOperator(
         task_id='export_final_output',
         python_callable=export_final_answer,
         provide_context=True
     )
+
+    # Task dependencies
+    task1 >> task2 >> export_final_output

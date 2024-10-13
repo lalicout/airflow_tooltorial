@@ -1,9 +1,24 @@
-airflow-data
 
 # These are some examples of commonly ignored file patterns.
 # You should customize this list as applicable to your project.
 # Learn more about .gitignore:
 #     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+
+#logs do Airflow
+logs/
+
+#banco de dados local do Airflow
+airflow.db
+
+# arquivo PID do servidor web do Airflow
+airflow-webserver.pid
+
+#  senha de administrador standalone
+standalone_admin_password.txt
+
+# arquivos de cache do Python
+__pycache__/
+
 
 # Node artifact files
 node_modules/
@@ -24,7 +39,7 @@ dist/
 # Maven
 target/
 dist/
-
+venv/
 # JetBrains IDE
 .idea/
 
@@ -50,3 +65,4 @@ Thumbs.db
 *.mov
 *.wmv
 
+repositorios_indicium.code-workspace/
